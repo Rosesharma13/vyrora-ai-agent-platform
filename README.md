@@ -1,98 +1,144 @@
 # Vyrora AI
 
-A multi-agent AI platform with a FastAPI backend and React frontend. A lightweight supervisor routes requests to one of four specialized agents, each powered by Groq's LLM API.
+[![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](https://fastapi.tiangolo.com/)
+[![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB)](https://vitejs.dev/)
+[![LLM](https://img.shields.io/badge/LLM-Groq-orange)](https://groq.com/)
+[![Deployed on Render](https://img.shields.io/badge/backend%20deploy-Render-46E3B7)](https://render.com/)
+[![Deployed on Vercel](https://img.shields.io/badge/frontend%20deploy-Vercel-000000)](https://vercel.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 
-**Live demo:** _add your deployed frontend URL here after deployment_
+A multi-agent AI platform with a FastAPI backend and a React frontend. A lightweight router directs each request to one of four specialized agents, all powered by Groq's LLM API.
+
+**Live App:** _add Vercel frontend URL here_
+**Backend API:** _add Render backend URL here_
 
 ---
 
-## What it actually does
+## Overview
 
-| Agent | What it does |
+Vyrora AI demonstrates a practical, production-deployable multi-agent architecture without unnecessary complexity. Instead of a heavyweight orchestration framework, a simple keyword-based supervisor routes requests — appropriate for four independent agents with no shared state between them.
+
+## Features
+
+| Agent | Description |
 |---|---|
-| **Research Agent** | Takes a topic/question and returns a structured overview, key points, and trends |
-| **Document Agent** | Accepts a PDF or text file upload, extracts the text, returns a summary + key points, and answers follow-up questions about the document |
-| **Planning Agent** | Takes a goal and returns a concrete numbered action plan with a flagged risk |
-| **Presentation Agent** | Takes a topic and returns a structured slide-by-slide outline (title + bullets per slide) |
+| **Research Agent** | Takes a topic or question and returns a structured overview, key points, and relevant trends |
+| **Document Agent** | Accepts a PDF or text file upload, extracts the content, returns a summary and key points, and answers follow-up questions about the document |
+| **Planning Agent** | Takes a goal and returns a concrete, numbered action plan with a flagged risk or blocker |
+| **Presentation Agent** | Takes a topic and returns a structured slide-by-slide outline (title + bullet points per slide) |
 
-A simple keyword-based **Supervisor** decides which agent handles a request. This is intentionally a plain router, not a graph-based orchestrator — with 4 independent agents and no shared state between them, a framework like LangGraph would add complexity without adding capability.
+## Scope & Design Decisions
 
-## What it does NOT do (yet)
+Documenting what was intentionally left out, and why:
 
-Being upfront about scope, since an oversold README is worse than an honest one:
+- **No vector database / RAG pipeline.** Document Q&A passes extracted text directly into the prompt. This is sufficient for typical resume- or report-length documents and avoids the operational overhead of a vector store on free-tier infrastructure, where persistent storage isn't reliably available.
+- **No LangGraph or multi-step agent orchestration.** With four independent agents and no shared state, a keyword-based router achieves the same routing outcome with significantly less complexity and fewer failure points.
+- **No authentication or persistent storage.** Every request is stateless by design. This keeps the project lightweight and appropriate for its current scope as a demonstration platform.
 
-- No vector database / RAG pipeline. Document Q&A works by passing extracted text directly into the prompt (works well for typical resume/report-length documents, not for huge multi-hundred-page files).
-- No persistent storage. Nothing is saved between requests — every upload/question is stateless.
-- No authentication or user accounts.
-- No meeting/transcript agent (was a stub in earlier versions, removed rather than left broken).
+## Tech Stack
 
-## Tech stack
+**Backend**
+- FastAPI
+- Groq API (`openai/gpt-oss-120b`)
+- pypdf (PDF text extraction)
 
-- **Backend:** FastAPI, Groq API (`openai/gpt-oss-120b`), pypdf
-- **Frontend:** React (Vite), Axios
-- **Deployment:** Render (backend), Vercel (frontend)
+**Frontend**
+- React (Vite)
+- Axios
 
-## Project structure
+**Deployment**
+- Render (backend)
+- Vercel (frontend)
 
+## Project Structure
 ```
-backend/
-  agents/          # research, document, task (planning), presentation, supervisor
-  api/routes.py    # all API endpoints
-  services/        # groq_service.py - LLM wrapper
-  main.py          # FastAPI app entrypoint
-frontend/
-  src/App.jsx      # full UI - tabs for each agent
+vyrora-ai-agent-platform/
+
+├── backend/
+│   ├── agents/
+│   │   ├── research_agent.py
+│   │   ├── document_agent.py
+│   │   ├── task_agent.py                 # planning agent
+│   │   ├── presentation_agent.py
+│   │   └── supervisor.py                 # keyword-based router
+│   ├── api/
+│   │   └── routes.py                     # all API endpoints
+│   ├── services/
+│   │   └── groq_service.py               # LLM API wrapper
+│   ├── main.py                           # FastAPI app entrypoint
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx                       # full UI, tabbed by agent
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── vercel.json
+│   └── .env.example
+├── render.yaml
+└── README.md
 ```
 
-## Running locally
+## Getting Started Locally
 
-### Backend
+### Prerequisites
+
+- Python 3.10+
+- Node.js 18+
+- A free [Groq API key](https://console.groq.com/keys)
+
+### Backend Setup
 
 ```bash
 cd backend
 pip install -r requirements.txt
-cp .env.example .env   # then add your real GROQ_API_KEY
+cp .env.example .env
+# Add your real GROQ_API_KEY to .env
 uvicorn main:app --reload
 ```
 
-Backend runs at `http://127.0.0.1:8000`. Visit `/docs` for interactive API docs.
+Backend runs at `http://127.0.0.1:8000`. Interactive API docs available at `/docs`.
 
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # VITE_API_URL=http://127.0.0.1:8000 for local dev
+cp .env.example .env
+# VITE_API_URL=http://127.0.0.1:8000 for local development
 npm run dev
 ```
 
 ## Deployment
 
-### Backend (Render)
+### Backend → Render
 
-1. Push this repo to GitHub.
-2. On Render: New → Web Service → connect this repo.
-3. Root directory: `backend`
-4. Build command: `pip install -r requirements.txt`
-5. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-6. Add environment variable: `GROQ_API_KEY` (your real key)
-7. After the frontend is deployed, also add `FRONTEND_ORIGIN` set to your Vercel URL (restricts CORS to your real frontend instead of `*`).
+1. Push this repository to GitHub.
+2. On Render: **New +** → **Web Service** → connect this repo.
+3. **Language:** Python 3
+4. **Root Directory:** `backend`
+5. **Build Command:** `pip install -r requirements.txt`
+6. **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+7. Add environment variable: `GROQ_API_KEY`
+8. After the frontend is deployed, also add `FRONTEND_ORIGIN` set to the Vercel URL to restrict CORS.
 
-A `render.yaml` is included at the repo root for Render's "Infrastructure as Code" import option.
+A `render.yaml` is included at the repo root for Render's Infrastructure-as-Code import.
 
-### Frontend (Vercel)
+### Frontend → Vercel
 
-1. On Vercel: New Project → import this repo.
-2. Root directory: `frontend`
-3. Framework preset: Vite (auto-detected via `vercel.json`)
-4. Add environment variable: `VITE_API_URL` set to your deployed Render backend URL (e.g. `https://vyrora-ai-backend.onrender.com`)
+1. On Vercel: **Add New** → **Project** → import this repo.
+2. **Root Directory:** `frontend`
+3. **Framework Preset:** Vite (auto-detected via `vercel.json`)
+4. Add environment variable: `VITE_API_URL` set to the deployed Render backend URL
 5. Deploy.
 
-**Note on free-tier Render:** the backend will spin down after inactivity and take ~30-50 seconds to wake up on the first request after idling. This is a Render free-tier limitation, not a bug in this project.
+> **Note:** Render's free tier spins the backend down after inactivity. The first request after idling can take 30–50 seconds to respond — this is a platform limitation, not an application bug.
 
 ## API Reference
 
-| Endpoint | Method | Body | Returns |
+| Endpoint | Method | Request Body | Response |
 |---|---|---|---|
 | `/research` | POST | `{"question": "..."}` | `{"response": "..."}` |
 | `/plan` | POST | `{"goal": "..."}` | `{"response": "..."}` |
@@ -102,6 +148,21 @@ A `render.yaml` is included at the repo root for Render's "Infrastructure as Cod
 | `/route` | POST | `{"question": "..."}` | `{"agent": "agent_name"}` |
 | `/health` | GET | — | `{"status": "ok"}` |
 
+## Roadmap
+
+Potential future directions, not yet implemented:
+
+- [ ] Persistent vector storage for document Q&A across larger files
+- [ ] User authentication and saved session history
+- [ ] Streaming responses for long-form agent output
+
 ## License
 
 MIT
+
+## Author
+
+**Rose Sharma**
+- [GitHub](https://github.com/Rosesharma13) 
+- [LinkedIn](https://linkedin.com/in/rose-sharma13) 
+- [Portfolio](https://rosesharma13.github.io)
