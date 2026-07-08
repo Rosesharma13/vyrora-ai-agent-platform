@@ -17,6 +17,11 @@ A multi-agent AI platform with a FastAPI backend and a React frontend. A lightwe
 
 ---
 
+## Screenshots
+
+![Vyrora AI Home](assets/screenshot-home.png)
+![Research Agent in action](assets/screenshot-research.png)
+
 ## Overview
 
 Vyrora AI demonstrates a practical, production-deployable multi-agent architecture without unnecessary complexity. Instead of a heavyweight orchestration framework, a simple keyword-based supervisor routes requests — appropriate for four independent agents with no shared state between them.
